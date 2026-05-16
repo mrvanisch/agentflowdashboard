@@ -165,6 +165,7 @@ export default function Dashboard() {
   const [adminError, setAdminError] = useState("");
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [newPassword, setNewPassword] = useState("");
+  const [registrationToken, setRegistrationToken] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const selected = tasks.find((task) => task.id === selectedId) || tasks[0] || null;
@@ -199,6 +200,36 @@ export default function Dashboard() {
     setTasks(data.tasks);
     setNotifications(data.notifications);
     setSelectedId((current) => current || data.tasks[0]?.id || null);
+  }
+
+  async function fetchRegistrationToken() {
+    if (user?.role !== "ADMIN") return;
+    try {
+      const data = await jsonFetch<{ token: string | null }>("/api/admin/registration-token");
+      setRegistrationToken(data.token);
+    } catch (err) {
+      console.error("Failed to load registration token:", err);
+    }
+  }
+
+  async function regenerateToken() {
+    if (!confirm("Czy na pewno chcesz wygenerowac nowy token rejestracji? Stary przestanie dzialac.")) return;
+    try {
+      const data = await jsonFetch<{ token: string }>("/api/admin/registration-token", { method: "POST" });
+      setRegistrationToken(data.token);
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : "Blad podczas generowania tokenu.");
+    }
+  }
+
+  async function deleteToken() {
+    if (!confirm("Czy na pewno chcesz calkowicie usunac token? Spowoduje to ZABLOKOWANIE mozliwosci rejestracji nowych kont.")) return;
+    try {
+      await jsonFetch("/api/admin/registration-token", { method: "DELETE" });
+      setRegistrationToken(null);
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : "Blad podczas usuwania tokenu.");
+    }
   }
 
   async function loadAuditLogs() {
@@ -517,7 +548,7 @@ export default function Dashboard() {
           <button className={view === "history" ? "nav-active" : ""} onClick={() => setView("history")}><Clock3 size={18} /> Historia</button>
           {user.role === "ADMIN" && (
             <>
-              <button className={view === "admin" ? "nav-active" : ""} onClick={() => setView("admin")}><UserCog size={18} /> Admin</button>
+              <button className={view === "admin" ? "nav-active" : ""} onClick={() => { setView("admin"); fetchRegistrationToken(); }}><UserCog size={18} /> Admin</button>
               <button className={view === "audit" ? "nav-active" : ""} onClick={() => { setView("audit"); loadAuditLogs(); }}><ShieldAlert size={18} /> Audyty</button>
             </>
           )}
@@ -782,6 +813,31 @@ export default function Dashboard() {
         {view === "admin" && user.role === "ADMIN" && (
           <section className="page-panel">
             <div className="panel-title"><UserCog size={18} /> Administracja uzytkownikami</div>
+            
+            <section className="case-card" style={{ marginBottom: "24px" }}>
+              <div className="panel-title"><ShieldAlert size={18} /> Token rejestracji</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", background: "var(--bg-subtle)", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                <div>
+                  <strong style={{ display: "block", marginBottom: "4px" }}>Aktualny token:</strong>
+                  {registrationToken ? (
+                    <code style={{ padding: "6px 10px", background: "var(--bg)", borderRadius: "4px", border: "1px solid var(--border)", fontSize: "14px", userSelect: "all" }}>
+                      {registrationToken}
+                    </code>
+                  ) : (
+                    <span className="muted" style={{ color: "var(--error)" }}>Rejestracja jest zamknieta (brak tokenu)</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={regenerateToken} style={{ flex: 1, padding: "8px", borderRadius: "6px", background: "var(--bg)", border: "1px solid var(--border)", cursor: "pointer" }}>
+                    Wylosuj nowy
+                  </button>
+                  <button onClick={deleteToken} disabled={!registrationToken} style={{ flex: 1, padding: "8px", borderRadius: "6px", background: "var(--bg)", border: "1px solid var(--error)", color: "var(--error)", cursor: registrationToken ? "pointer" : "not-allowed", opacity: registrationToken ? 1 : 0.5 }}>
+                    Zamknij rejestracje
+                  </button>
+                </div>
+              </div>
+            </section>
+
             <section className="admin-summary">
               <div><strong>{users.length}</strong><span>wszyscy</span></div>
               <div><strong>{users.filter((person) => person.approved).length}</strong><span>aktywni</span></div>
