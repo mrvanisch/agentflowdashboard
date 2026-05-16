@@ -7,6 +7,7 @@ type MentionUser = {
   name: string;
   username: string;
   avatarColor: string;
+  avatarUrl?: string | null;
 };
 
 type MentionInputProps = {
@@ -113,7 +114,11 @@ export default function MentionInput({ value, onChange, users, placeholder }: Me
                 chooseUser(user);
               }}
             >
-              <span className="mention-avatar" style={{ background: user.avatarColor }}>{initials(user.name)}</span>
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.name} className="mention-avatar" style={{ objectFit: "cover" }} />
+              ) : (
+                <span className="mention-avatar" style={{ background: user.avatarColor }}>{initials(user.name)}</span>
+              )}
               <span>
                 <strong>{user.name}</strong>
                 <em>@{user.username}</em>

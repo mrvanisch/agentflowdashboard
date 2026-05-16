@@ -14,3 +14,117 @@
  ○ Compiling / ...
  ✓ Compiled / in 1120ms (607 modules)
  GET / 200 in 1562ms
+ ✓ Compiled in 806ms (263 modules)
+ ✓ Compiled / in 165ms (358 modules)
+ GET / 200 in 420ms
+ ○ Compiling /api/auth/me ...
+ ✓ Compiled /api/auth/me in 565ms (628 modules)
+ GET /api/auth/me 200 in 797ms
+ ✓ Compiled /api/bootstrap in 244ms (631 modules)
+ GET /api/bootstrap 200 in 394ms
+ GET /api/bootstrap 200 in 81ms
+ GET /api/bootstrap 200 in 18ms
+ ✓ Compiled /api/tasks/[id] in 460ms (646 modules)
+ PATCH /api/tasks/cmp8subek0001119t5jdy3lpr 200 in 359ms
+ PATCH /api/tasks/cmp8subek0001119t5jdy3lpr 200 in 1341ms
+ PATCH /api/tasks/cmp8subek0001119t5jdy3lpr 200 in 60ms
+ PATCH /api/tasks/cmp8subek0001119t5jdy3lpr 200 in 47ms
+ GET /api/bootstrap 200 in 40ms
+ GET /api/bootstrap 200 in 32ms
+ GET /api/bootstrap 200 in 20ms
+ GET /api/bootstrap 200 in 34ms
+ ✓ Compiled in 288ms (658 modules)
+ ✓ Compiled in 1ms (394 modules)
+ ✓ Compiled in 1ms (394 modules)
+ ✓ Compiled in 1ms (394 modules)
+ GET /api/bootstrap 200 in 549ms
+ GET / 200 in 613ms
+ GET / 200 in 160ms
+ ✓ Compiled /api/auth/me in 153ms (396 modules)
+ GET /api/auth/me 200 in 199ms
+ GET /api/bootstrap 200 in 41ms
+ ✓ Compiled /api/admin/registration-token in 215ms (648 modules)
+ GET /api/admin/registration-token 200 in 262ms
+ ✓ Compiled /api/admin/audit-logs in 197ms (650 modules)
+ GET /api/admin/audit-logs 200 in 243ms
+ ✓ Compiled /api/admin/ip-blocks in 234ms (652 modules)
+ GET /api/admin/ip-blocks 200 in 289ms
+ GET /api/bootstrap 200 in 20ms
+ GET /api/bootstrap 200 in 33ms
+ GET /api/bootstrap 200 in 33ms
+ GET /api/bootstrap 200 in 16ms
+ GET / 200 in 201ms
+ GET /api/auth/me 200 in 26ms
+ GET /api/bootstrap 200 in 31ms
+ GET /api/admin/audit-logs 200 in 33ms
+ GET /api/admin/ip-blocks 200 in 25ms
+ GET /api/bootstrap 200 in 16ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 18ms
+ GET /api/bootstrap 200 in 19ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 32ms
+ GET /api/bootstrap 200 in 34ms
+ GET /api/bootstrap 200 in 34ms
+ GET /api/bootstrap 200 in 16ms
+ GET /api/bootstrap 200 in 20ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 19ms
+ GET /api/bootstrap 200 in 16ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 18ms
+ GET /api/bootstrap 200 in 19ms
+ ✓ Compiled /api/auth/me in 509ms (629 modules)
+ ✓ Compiled (631 modules)
+ GET /api/auth/me 200 in 348ms
+ GET /api/bootstrap 200 in 31ms
+ GET /api/bootstrap 200 in 17ms
+ ✓ Compiled in 214ms (631 modules)
+ GET /api/bootstrap 200 in 82ms
+ GET /api/bootstrap 200 in 18ms
+ ✓ Compiled in 227ms (631 modules)
+ GET /api/bootstrap 200 in 51ms
+ ✓ Compiled in 199ms (631 modules)
+ GET /api/bootstrap 200 in 36ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 16ms
+ GET /api/bootstrap 200 in 19ms
+ GET /api/bootstrap 200 in 34ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 18ms
+ GET /api/bootstrap 200 in 17ms
+ GET / 200 in 238ms
+ ✓ Compiled in 415ms (629 modules)
+ GET / 200 in 92ms
+ GET /api/bootstrap 200 in 36ms
+ GET /api/bootstrap 200 in 34ms
+ GET /api/bootstrap 200 in 18ms
+ GET /api/bootstrap 200 in 18ms
+ GET /api/bootstrap 200 in 18ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 347ms (629 modules)
+ GET / 200 in 329ms
+ ✓ Compiled /api/auth/me in 71ms (381 modules)
+ GET /api/auth/me 200 in 120ms
+ GET /api/bootstrap 200 in 32ms
+ ✓ Compiled in 449ms (608 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 288ms
+ ✓ Compiled /api/auth/me in 88ms (378 modules)
+ GET /api/auth/me 200 in 195ms
+ ✓ Compiled /api/bootstrap in 67ms (381 modules)
+ GET /api/bootstrap 200 in 140ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 209ms (631 modules)
+ GET / 200 in 408ms
+ GET /api/auth/me 200 in 23ms
+ GET /api/bootstrap 200 in 30ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 268ms (631 modules)
+ GET / 200 in 397ms
+ GET /api/auth/me 200 in 25ms
+ GET /api/bootstrap 200 in 37ms

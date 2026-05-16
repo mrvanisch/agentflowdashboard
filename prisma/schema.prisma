@@ -14,6 +14,7 @@ model User {
   email             String             @unique
   passwordHash      String
   avatarColor       String             @default("#2563eb")
+  avatarUrl         String?
   role              String             @default("MEMBER")
   approved          Boolean            @default(false)
   mustChangePassword Boolean           @default(false)

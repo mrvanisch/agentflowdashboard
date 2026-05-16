@@ -10,6 +10,7 @@ type User = {
   username: string;
   email: string;
   avatarColor: string;
+  avatarUrl?: string | null;
   role: "ADMIN" | "MEMBER";
   approved: boolean;
 };
@@ -65,6 +66,11 @@ function initials(name: string) {
 }
 
 function Avatar({ user }: { user: User }) {
+  if (user.avatarUrl) {
+    return (
+      <img src={user.avatarUrl} alt={user.name} className="avatar" title={`${user.name} (@${user.username})`} style={{ objectFit: "cover" }} />
+    );
+  }
   return (
     <span className="avatar" style={{ background: user.avatarColor }} title={`${user.name} (@${user.username})`}>
       {initials(user.name)}

@@ -587,10 +587,22 @@ export default function Dashboard() {
             <p>{projects[0]?.key || "AFD"} workspace</p>
             <h2>{projects[0]?.name || "AgentFlowDashboard"}</h2>
           </div>
-          <label className="search">
-            <Search size={18} />
-            <input placeholder="Szukaj taskow, osob, opisow..." value={query} onChange={(e) => setQuery(e.target.value)} />
-          </label>
+          <div className="search-container" style={{ position: "relative" }}>
+            <label className="search">
+              <Search size={18} />
+              <input placeholder="Szukaj taskow, osob, opisow..." value={query} onChange={(e) => setQuery(e.target.value)} />
+            </label>
+            {query.trim().length > 0 && filteredTasks.length > 0 && (
+              <div className="search-dropdown" style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "8px", marginTop: "4px", zIndex: 100, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                {filteredTasks.slice(0, 5).map(task => (
+                  <button key={task.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", background: "none", border: "none", borderBottom: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }} onClick={() => { setSelectedId(task.id); setView("board"); setQuery(""); setOpenCaseKey(task.key); }}>
+                    <strong style={{ color: "var(--primary)" }}>{task.key}</strong>
+                    <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "14px", color: "var(--fg)" }}>{task.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </header>
 
         <section className="metrics">
