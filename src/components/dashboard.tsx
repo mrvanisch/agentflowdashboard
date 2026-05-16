@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import TaskCasePage from "@/components/task-case-page";
 import MentionInput from "@/components/mention-input";
-import { resolveAvatarUrl } from "@/components/avatar-url";
+import { resolveAvatarUrl, resolveFileUrl } from "@/components/avatar-url";
 
 type User = {
   id: string;
@@ -850,14 +850,13 @@ export default function Dashboard() {
                     <span className="muted">Brak wpisow</span>
                   ) : (
                     selected.attachments.map((item) => (
-                      <p key={item.id}>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <Paperclip size={14} />
-                          {item.fileName} ({Math.ceil(item.fileSize / 1024)} KB)
-                        </a>
-                      </p>
-                    ))
-                  )}
+                    <p key={item.id}>
+                      <a href={resolveFileUrl(item.url)} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <Paperclip size={14} />
+                        {item.fileName} ({Math.ceil(item.fileSize / 1024)} KB)
+                      </a>
+                    </p>
+                    ))                  )}
                 </div>
                 <Feed title="Aktywnosc" items={selected.activities.map((item) => `${item.actor.name}: ${item.message}`)} />
               </section>

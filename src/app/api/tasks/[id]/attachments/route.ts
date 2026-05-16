@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { handleError, ok } from "@/lib/api";
 import { logActivity, notifyUsers, taskInclude } from "@/lib/tasks";
+import { logAudit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
@@ -32,23 +33,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     await mkdir(uploadDir, { recursive: true });
     await writeFile(path.join(uploadDir, storedName), bytes);
 
-    await prisma.attachment.create({
+    const attachment = await prisma.attachment.create({
       data: {
         taskId: id,
         uploadedById: user.id,
         fileName: uploadedFile.name,
         fileSize: bytes.length,
         mimeType: uploadedFile.type || "application/octet-stream",
-        url: `/uploads/${storedName}`
+        url: `/api/files/uploads/${storedName}`
       }
     });
     await logActivity(id, user.id, "ATTACHED", `Dodano plik ${uploadedFile.name}.`);
+    await logAudit({ userId: user.id, action: "FILE_UPLOAD", entity: "Attachment", entityId: attachment.id, details: { taskId: id, fileName: uploadedFile.name } });
+
     await notifyUsers({
       userIds: task.assignees.map((item) => item.userId),
       actorId: user.id,
       taskId: id,
       title: `Nowy zalacznik w ${task.key}`,
-      body: file.name
+      body: uploadedFile.name
     });
 
     const fresh = await prisma.task.findUniqueOrThrow({ where: { id }, include: taskInclude });

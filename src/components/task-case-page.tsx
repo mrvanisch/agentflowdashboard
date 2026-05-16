@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bell, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileUp, Info, Link2, MessageSquare, Paperclip, Trash2, Users, X } from "lucide-react";
 import MentionInput from "@/components/mention-input";
-import { resolveAvatarUrl } from "@/components/avatar-url";
+import { resolveAvatarUrl, resolveFileUrl } from "@/components/avatar-url";
 
 type User = {
   id: string;
@@ -394,7 +394,7 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
             <button type="button" onClick={() => fileInput.current?.click()}><FileUp size={16} /> Dodaj zalacznik</button>
             <div className="case-files">
               {task.attachments.length === 0 ? <span className="muted">Brak zalacznikow</span> : task.attachments.map((file) => (
-                <a key={file.id} href={file.url} target="_blank" rel="noreferrer">
+                <a key={file.id} href={resolveFileUrl(file.url)} target="_blank" rel="noreferrer">
                   <Paperclip size={16} />
                   <span>{file.fileName}</span>
                   <em>{Math.ceil(file.fileSize / 1024)} KB</em>
