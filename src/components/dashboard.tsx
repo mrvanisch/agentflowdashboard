@@ -90,8 +90,7 @@ const statuses: { id: Status; label: string }[] = [
   { id: "TODO", label: "Do zrobienia" },
   { id: "IN_PROGRESS", label: "W toku" },
   { id: "REVIEW", label: "Review" },
-  { id: "DONE", label: "Gotowe" },
-  { id: "BLOCKED", label: "Blokada" }
+  { id: "DONE", label: "Gotowe" }
 ];
 
 const priorities: { id: Priority; label: string }[] = [
@@ -595,7 +594,7 @@ export default function Dashboard() {
 
         <section className="metrics">
           <div><CheckCircle2 size={20} /><strong>{tasks.filter((t) => t.status === "DONE").length}</strong><span>gotowe</span></div>
-          <div><ShieldAlert size={20} /><strong>{tasks.filter((t) => t.status === "BLOCKED").length}</strong><span>blokady</span></div>
+          <div><Clock3 size={20} /><strong>{tasks.filter((t) => t.status === "IN_PROGRESS").length}</strong><span>w toku</span></div>
           <div><UserPlus size={20} /><strong>{tasks.filter((t) => t.assignees.some((a) => a.user.id === user.id)).length}</strong><span>moje taski</span></div>
           <div><Bell size={20} /><strong>{unread}</strong><span>nowe alerty</span></div>
         </section>

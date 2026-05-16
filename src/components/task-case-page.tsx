@@ -40,8 +40,7 @@ const statuses: { id: Status; label: string }[] = [
   { id: "TODO", label: "Do zrobienia" },
   { id: "IN_PROGRESS", label: "W toku" },
   { id: "REVIEW", label: "Review" },
-  { id: "DONE", label: "Gotowe" },
-  { id: "BLOCKED", label: "Blokada" }
+  { id: "DONE", label: "Gotowe" }
 ];
 
 const priorities: { id: Priority; label: string }[] = [

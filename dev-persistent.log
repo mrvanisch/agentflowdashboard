@@ -2,3 +2,12 @@
 > agent-flow-dashboard@0.1.0 dev
 > next dev -p 5000
 
+   ▲ Next.js 15.5.18
+   - Local:        http://localhost:5000
+   - Network:      http://192.168.56.1:5000
+   - Environments: .env
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
