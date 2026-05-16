@@ -10,7 +10,7 @@ export async function GET() {
       take: 100,
       include: {
         user: {
-          select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true, mustChangePassword: true }
+          select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true, mustChangePassword: true }
         }
       }
     });

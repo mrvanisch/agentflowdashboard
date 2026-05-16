@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: { avatarUrl },
-      select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
+      select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true, mustChangePassword: true }
     });
 
     await logAudit({ userId: user.id, action: "AVATAR_UPDATE", entity: "User", entityId: user.id });

@@ -53,6 +53,7 @@ export async function POST(request: Request) {
         username: user.username,
         email: user.email,
         avatarColor: user.avatarColor,
+        avatarUrl: user.avatarUrl,
         role: user.role,
         approved: user.approved,
         mustChangePassword: user.mustChangePassword

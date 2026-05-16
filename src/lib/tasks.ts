@@ -4,19 +4,19 @@ import { prisma } from "@/lib/prisma";
 export const taskInclude = {
   project: true,
   reporter: {
-      select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+      select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
   },
   assignees: {
     include: {
       user: {
-        select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+        select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
       }
     }
   },
   comments: {
     include: {
       author: {
-        select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+        select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
       }
     },
     orderBy: { createdAt: "asc" as const }
@@ -24,7 +24,7 @@ export const taskInclude = {
   attachments: {
     include: {
       uploadedBy: {
-        select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+        select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
       }
     },
     orderBy: { createdAt: "desc" as const }
@@ -32,7 +32,7 @@ export const taskInclude = {
   links: {
     include: {
       author: {
-        select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+        select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
       }
     },
     orderBy: { createdAt: "desc" as const }
@@ -40,7 +40,7 @@ export const taskInclude = {
   activities: {
     include: {
       actor: {
-        select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+        select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
       }
     },
     orderBy: { createdAt: "desc" as const }

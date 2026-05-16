@@ -10,7 +10,7 @@ export async function PATCH(_request: Request, { params }: { params: Promise<{ i
     const user = await prisma.user.update({
       where: { id },
       data: { approved: true },
-      select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true, mustChangePassword: true, createdAt: true }
+      select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true, mustChangePassword: true, createdAt: true }
     });
 
     await logAudit({ userId: admin.id, action: "USER_APPROVE", entity: "User", entityId: user.id });

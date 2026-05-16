@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         role: firstUser ? "ADMIN" : "MEMBER",
         approved: firstUser
       },
-      select: { id: true, name: true, username: true, email: true, avatarColor: true, role: true, approved: true }
+      select: { id: true, name: true, username: true, email: true, avatarColor: true, avatarUrl: true, role: true, approved: true }
     });
 
     await logAudit({ userId: user.id, action: "REGISTER_SUCCESS", entity: "User", entityId: user.id });

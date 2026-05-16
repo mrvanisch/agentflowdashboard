@@ -10,6 +10,7 @@ const userSelect = {
   username: true,
   email: true,
   avatarColor: true,
+  avatarUrl: true,
   role: true,
   approved: true,
   mustChangePassword: true,

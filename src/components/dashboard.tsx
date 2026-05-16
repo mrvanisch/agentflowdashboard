@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
+  Camera,
   CheckCircle2,
   Clock3,
   FileUp,
@@ -118,6 +119,17 @@ function initials(name: string) {
 }
 
 function Avatar({ user }: { user: User }) {
+  if (user.avatarUrl) {
+    return (
+      <img
+        src={user.avatarUrl}
+        alt={user.name}
+        className="avatar"
+        title={`${user.name} (@${user.username})`}
+      />
+    );
+  }
+
   return (
     <span className="avatar" style={{ background: user.avatarColor }} title={`${user.name} (@${user.username})`}>
       {initials(user.name)}
@@ -163,12 +175,15 @@ export default function Dashboard() {
   const [comment, setComment] = useState("");
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
   const [error, setError] = useState("");
   const [adminError, setAdminError] = useState("");
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [newPassword, setNewPassword] = useState("");
   const [registrationToken, setRegistrationToken] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const avatarInput = useRef<HTMLInputElement>(null);
 
   const selected = tasks.find((task) => task.id === selectedId) || tasks[0] || null;
   const unread = notifications.filter((item) => !item.read).length;
@@ -409,6 +424,31 @@ export default function Dashboard() {
     setTasks((items) => items.map((task) => (task.id === selected.id ? data.task : task)));
   }
 
+  async function uploadAvatar(file: File) {
+    setAvatarError("");
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Plik jest zbyt duzy. Maksymalny rozmiar to 2MB.");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Wybierz plik graficzny PNG, JPG albo WEBP.");
+      return;
+    }
+
+    const form = new FormData();
+    form.append("file", file);
+    setAvatarUploading(true);
+    try {
+      const data = await jsonFetch<{ user: User }>("/api/auth/avatar", { method: "POST", body: form });
+      setUser((current) => (current ? { ...current, ...data.user } : data.user));
+      await load();
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "Blad podczas wgrywania avatara.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
   async function logout() {
     await jsonFetch("/api/auth/logout", { method: "POST" });
     setUser(null);
@@ -573,27 +613,21 @@ export default function Dashboard() {
           )}
         </nav>
         <div className="user-card">
-          <input type="file" hidden id="avatar-upload" accept="image/png,image/jpeg,image/webp" onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            if (file.size > 2 * 1024 * 1024) {
-              alert("Plik jest zbyt duzy. Maksymalny rozmiar to 2MB.");
-              return;
-            }
-            const form = new FormData();
-            form.append("file", file);
-            try {
-              const res = await jsonFetch<{ user: User }>("/api/auth/avatar", { method: "POST", body: form });
-              setUser(res.user);
-            } catch (err) {
-              alert(err instanceof Error ? err.message : "Blad podczas wgrywania awatara.");
-            }
+          <input ref={avatarInput} type="file" hidden accept="image/png,image/jpeg,image/webp" onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) uploadAvatar(file);
           }} />
-          <label htmlFor="avatar-upload" style={{ cursor: "pointer", display: "flex" }} title="Zmien avatar (max 2MB)">
+          <button type="button" className="avatar-upload" onClick={() => avatarInput.current?.click()} disabled={avatarUploading} title="Zmien avatar">
             <Avatar user={user} />
-          </label>
-          <div>
+            <span className="avatar-upload-icon"><Camera size={13} /></span>
+          </button>
+          <div className="user-meta">
             <strong>{user.name}</strong>
+            <button type="button" className="avatar-upload-text" onClick={() => avatarInput.current?.click()} disabled={avatarUploading}>
+              {avatarUploading ? "Wgrywanie..." : "Zmien avatar"}
+            </button>
+            {avatarError && <span className="avatar-error">{avatarError}</span>}
             <span>@{user.username} · {user.role}</span>
           </div>
           <button className="icon-btn" onClick={logout} title="Wyloguj"><LogOut size={18} /></button>
