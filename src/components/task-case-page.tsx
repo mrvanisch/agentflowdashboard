@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Bell, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileUp, Info, Link2, MessageSquare, Paperclip, Trash2, Users, X } from "lucide-react";
 import MentionInput from "@/components/mention-input";
+import { resolveAvatarUrl } from "@/components/avatar-url";
 
 type User = {
   id: string;
@@ -66,9 +67,10 @@ function initials(name: string) {
 }
 
 function Avatar({ user }: { user: User }) {
-  if (user.avatarUrl) {
+  const avatarUrl = resolveAvatarUrl(user.avatarUrl);
+  if (avatarUrl) {
     return (
-      <img src={user.avatarUrl} alt={user.name} className="avatar" title={`${user.name} (@${user.username})`} style={{ objectFit: "cover" }} />
+      <img src={avatarUrl} alt={user.name} className="avatar" title={`${user.name} (@${user.username})`} style={{ objectFit: "cover" }} />
     );
   }
   return (

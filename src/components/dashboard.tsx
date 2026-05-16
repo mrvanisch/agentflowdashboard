@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import TaskCasePage from "@/components/task-case-page";
 import MentionInput from "@/components/mention-input";
+import { resolveAvatarUrl } from "@/components/avatar-url";
 
 type User = {
   id: string;
@@ -119,10 +120,11 @@ function initials(name: string) {
 }
 
 function Avatar({ user }: { user: User }) {
-  if (user.avatarUrl) {
+  const avatarUrl = resolveAvatarUrl(user.avatarUrl);
+  if (avatarUrl) {
     return (
       <img
-        src={user.avatarUrl}
+        src={avatarUrl}
         alt={user.name}
         className="avatar"
         title={`${user.name} (@${user.username})`}

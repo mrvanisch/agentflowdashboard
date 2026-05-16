@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { resolveAvatarUrl } from "@/components/avatar-url";
 
 type MentionUser = {
   id: string;
@@ -104,27 +105,30 @@ export default function MentionInput({ value, onChange, users, placeholder }: Me
       />
       {focused && suggestions.length > 0 && (
         <div className="mention-menu">
-          {suggestions.map((user, index) => (
-            <button
-              type="button"
-              key={user.id}
-              className={index === activeIndex ? "active" : ""}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                chooseUser(user);
-              }}
-            >
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="mention-avatar" style={{ objectFit: "cover" }} />
-              ) : (
-                <span className="mention-avatar" style={{ background: user.avatarColor }}>{initials(user.name)}</span>
-              )}
-              <span>
-                <strong>{user.name}</strong>
-                <em>@{user.username}</em>
-              </span>
-            </button>
-          ))}
+          {suggestions.map((user, index) => {
+            const avatarUrl = resolveAvatarUrl(user.avatarUrl);
+            return (
+              <button
+                type="button"
+                key={user.id}
+                className={index === activeIndex ? "active" : ""}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  chooseUser(user);
+                }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={user.name} className="mention-avatar" style={{ objectFit: "cover" }} />
+                ) : (
+                  <span className="mention-avatar" style={{ background: user.avatarColor }}>{initials(user.name)}</span>
+                )}
+                <span>
+                  <strong>{user.name}</strong>
+                  <em>@{user.username}</em>
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

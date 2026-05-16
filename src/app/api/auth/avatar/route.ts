@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { handleError, ok } from "@/lib/api";
 import { logAudit } from "@/lib/audit";
+import { avatarPublicUrl, avatarUploadDir } from "@/lib/avatar-storage";
 
 export const runtime = "nodejs";
 
@@ -38,11 +39,11 @@ export async function POST(request: Request) {
     }
 
     const storedName = `avatar-${user.id}-${Date.now()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "avatars");
+    const uploadDir = avatarUploadDir();
     await mkdir(uploadDir, { recursive: true });
     await writeFile(path.join(uploadDir, storedName), bytes);
 
-    const avatarUrl = `/avatars/${storedName}`;
+    const avatarUrl = avatarPublicUrl(storedName);
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: { avatarUrl },
