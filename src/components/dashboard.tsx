@@ -22,6 +22,7 @@ import {
   Users
 } from "lucide-react";
 import TaskCasePage from "@/components/task-case-page";
+import MentionInput from "@/components/mention-input";
 
 type User = {
   id: string;
@@ -361,6 +362,15 @@ export default function Dashboard() {
   function mergeUpdatedTask(updatedTask: Task) {
     setTasks((items) => items.map((task) => (task.id === updatedTask.id ? updatedTask : task)));
     setSelectedId(updatedTask.id);
+  }
+
+  function removeDeletedTask(taskId: string) {
+    setTasks((items) => {
+      const next = items.filter((task) => task.id !== taskId);
+      setSelectedId((current) => (current === taskId ? next[0]?.id || null : current));
+      return next;
+    });
+    setOpenCaseKey(null);
   }
 
   async function deleteTask(id: string) {
@@ -742,7 +752,12 @@ export default function Dashboard() {
                   <button type="button" onClick={() => fileInput.current?.click()}><FileUp size={16} /> Dodaj plik</button>
                 </div>
                 <form onSubmit={addComment} className="comment-form">
-                  <input placeholder="Komentarz, np. @jan sprawdz prosze..." value={comment} onChange={(e) => setComment(e.target.value)} />
+                  <MentionInput
+                    placeholder="Komentarz, np. @jan sprawdz prosze..."
+                    value={comment}
+                    onChange={setComment}
+                    users={approvedUsers}
+                  />
                   <button>Wyslij</button>
                 </form>
                 <Feed title="Komentarze" items={selected.comments.map((item) => `${item.author.name}: ${item.body}`)} />
@@ -794,6 +809,7 @@ export default function Dashboard() {
                 embedded
                 onClose={() => setOpenCaseKey(null)}
                 onTaskUpdated={mergeUpdatedTask}
+                onTaskDeleted={removeDeletedTask}
               />
             </div>
           </div>

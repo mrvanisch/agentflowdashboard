@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bell, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileUp, Info, Link2, MessageSquare, Paperclip, Users, X } from "lucide-react";
+import { ArrowLeft, Bell, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileUp, Info, Link2, MessageSquare, Paperclip, Trash2, Users, X } from "lucide-react";
+import MentionInput from "@/components/mention-input";
 
 type User = {
   id: string;
@@ -82,9 +83,10 @@ type TaskCasePageProps = {
   embedded?: boolean;
   onClose?: () => void;
   onTaskUpdated?: (task: Task) => void;
+  onTaskDeleted?: (taskId: string) => void;
 };
 
-export default function TaskCasePage({ caseKey, embedded = false, onClose, onTaskUpdated }: TaskCasePageProps) {
+export default function TaskCasePage({ caseKey, embedded = false, onClose, onTaskUpdated, onTaskDeleted }: TaskCasePageProps) {
   const [task, setTask] = useState<Task | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [draft, setDraft] = useState({ title: "", description: "", status: "TODO" as Status, priority: "MEDIUM" as Priority, dueDate: "", assigneeIds: [] as string[] });
@@ -94,6 +96,24 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const taskRef = useRef<Task | null>(null);
+  const draftRef = useRef(draft);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveSeqRef = useRef(0);
+
+  useEffect(() => {
+    taskRef.current = task;
+  }, [task]);
+
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
 
   async function load() {
     const [taskData, bootstrap] = await Promise.all([
@@ -117,37 +137,88 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
     load().catch((err) => setError(err instanceof Error ? err.message : "Nie udalo sie wczytac taska."));
   }, [caseKey]);
 
-  async function persistDraft(nextDraft = draft) {
-    if (!task) return;
+  async function persistDraft(nextDraft = draftRef.current) {
+    const currentTask = taskRef.current;
+    if (!currentTask) return;
+    const saveSeq = ++saveSeqRef.current;
     setSaving(true);
     setError("");
     try {
-      const data = await jsonFetch<{ task: Task }>(`/api/tasks/${task.id}`, {
+      const data = await jsonFetch<{ task: Task }>(`/api/tasks/${currentTask.id}`, {
         method: "PATCH",
         body: JSON.stringify(nextDraft)
       });
-      setTask(data.task);
-      onTaskUpdated?.(data.task);
-      setDraft({
-        title: data.task.title,
-        description: data.task.description,
-        status: data.task.status,
-        priority: data.task.priority,
-        dueDate: data.task.dueDate ? data.task.dueDate.slice(0, 10) : "",
-        assigneeIds: data.task.assignees.map((item) => item.user.id)
-      });
-      setSavedAt(new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }));
+      if (saveSeq === saveSeqRef.current) {
+        setTask(data.task);
+        onTaskUpdated?.(data.task);
+        setSavedAt(new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" }));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nie udalo sie zapisac taska.");
+      if (saveSeq === saveSeqRef.current) {
+        setError(err instanceof Error ? err.message : "Nie udalo sie zapisac taska.");
+      }
     } finally {
-      setSaving(false);
+      if (saveSeq === saveSeqRef.current) setSaving(false);
     }
   }
 
   function updateAndSave(changes: Partial<typeof draft>) {
-    const nextDraft = { ...draft, ...changes };
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const nextDraft = { ...draftRef.current, ...changes };
     setDraft(nextDraft);
+    draftRef.current = nextDraft;
     persistDraft(nextDraft);
+  }
+
+  function updateDraftWithDebouncedSave(changes: Partial<typeof draft>) {
+    const nextDraft = { ...draftRef.current, ...changes };
+    setDraft(nextDraft);
+    draftRef.current = nextDraft;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
+      persistDraft(draftRef.current);
+    }, 700);
+  }
+
+  function flushPendingSave() {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+      persistDraft(draftRef.current);
+    }
+  }
+
+  function closeCase() {
+    flushPendingSave();
+    onClose?.();
+  }
+
+  async function deleteCurrentTask() {
+    const currentTask = taskRef.current;
+    if (!currentTask) return;
+    const confirmed = window.confirm(`Bezpowrotnie usunac sprawe ${currentTask.key}? Usuniete zostana komentarze, linki, historia i zalaczniki.`);
+    if (!confirmed) return;
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      await jsonFetch(`/api/tasks/${currentTask.id}`, { method: "DELETE" });
+      onTaskDeleted?.(currentTask.id);
+      onClose?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nie udalo sie usunac taska.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function addComment(event: React.FormEvent) {
@@ -190,7 +261,7 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
     return (
       <main className={embedded ? "case-shell embedded" : "case-shell"}>
         <section className="case-card">
-          {embedded ? <button className="case-link button-link" onClick={onClose}><X size={16} /> Zamknij</button> : <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>}
+          {embedded ? <button className="case-link button-link" onClick={closeCase}><X size={16} /> Zamknij</button> : <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>}
           <p className="error">{error}</p>
         </section>
       </main>
@@ -209,7 +280,7 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
     <main className={embedded ? "case-shell embedded" : "case-shell"}>
       <header className="case-header">
         {embedded ? (
-          <button className="case-link button-link" onClick={onClose}><X size={16} /> Zamknij</button>
+          <button className="case-link button-link" onClick={closeCase}><X size={16} /> Zamknij</button>
         ) : (
           <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>
         )}
@@ -221,6 +292,7 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
           <CheckCircle2 size={16} />
           <span>{saving ? "Zapisywanie..." : savedAt ? `Zapisano ${savedAt}` : "Autozapis aktywny"}</span>
         </div>
+        <button className="danger case-delete" onClick={deleteCurrentTask}><Trash2 size={16} /> Usun</button>
       </header>
 
       <section className="case-layout">
@@ -233,8 +305,18 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
               <div><span>Priorytet</span><strong>{priorities.find((item) => item.id === draft.priority)?.label}</strong></div>
               <div><span>Reporter</span><strong>{task.reporter.name}</strong></div>
             </div>
-            <input className="title-input" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} onBlur={() => persistDraft()} />
-            <textarea className="case-description" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} onBlur={() => persistDraft()} />
+            <input
+              className="title-input"
+              value={draft.title}
+              onChange={(e) => updateDraftWithDebouncedSave({ title: e.target.value })}
+              onBlur={flushPendingSave}
+            />
+            <textarea
+              className="case-description"
+              value={draft.description}
+              onChange={(e) => updateDraftWithDebouncedSave({ description: e.target.value })}
+              onBlur={flushPendingSave}
+            />
             {error && <p className="error">{error}</p>}
           </section>
 
@@ -254,7 +336,12 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
               ))}
             </div>
             <form className="comment-form" onSubmit={addComment}>
-              <input placeholder="Dodaj komentarz albo ping @username..." value={comment} onChange={(e) => setComment(e.target.value)} />
+              <MentionInput
+                placeholder="Dodaj komentarz albo ping @username..."
+                value={comment}
+                onChange={setComment}
+                users={users}
+              />
               <button>Wyslij</button>
             </form>
           </section>

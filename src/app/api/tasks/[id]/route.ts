@@ -1,9 +1,13 @@
+import { unlink } from "fs/promises";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { handleError, ok } from "@/lib/api";
 import { logActivity, notifyUsers, statusLabel, taskInclude, usersMentionedIn } from "@/lib/tasks";
 import { taskUpdateSchema } from "@/lib/validation";
 import { logAudit } from "@/lib/audit";
+
+export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -93,8 +97,21 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   try {
     const user = await requireUser();
     const { id } = await params;
-    await logAudit({ userId: user.id, action: "TASK_DELETE", entity: "Task", entityId: id });
+    const task = await prisma.task.findUniqueOrThrow({
+      where: { id },
+      include: { attachments: true }
+    });
+
+    await logAudit({ userId: user.id, action: "TASK_DELETE", entity: "Task", entityId: id, details: { key: task.key, title: task.title } });
+    await prisma.notification.deleteMany({ where: { taskId: id } });
     await prisma.task.delete({ where: { id } });
+
+    await Promise.allSettled(
+      task.attachments
+        .filter((attachment) => attachment.url.startsWith("/uploads/"))
+        .map((attachment) => unlink(path.join(process.cwd(), "public", attachment.url)))
+    );
+
     return ok({ deleted: true });
   } catch (error) {
     return handleError(error);
