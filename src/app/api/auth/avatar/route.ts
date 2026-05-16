@@ -18,12 +18,25 @@ export async function POST(request: Request) {
     }
 
     const uploadedFile = file as File;
+    
+    // Security: Limit file size to 2MB
+    if (uploadedFile.size > 2 * 1024 * 1024) {
+      throw new Error("Plik jest zbyt duzy. Maksymalny rozmiar to 2MB.");
+    }
+
     if (!uploadedFile.type.startsWith("image/")) {
       throw new Error("Plik musi byc obrazem.");
     }
 
     const bytes = Buffer.from(await uploadedFile.arrayBuffer());
-    const ext = uploadedFile.name.split('.').pop() || "png";
+    // Basic magic number check for common image types (optional but good)
+    if (bytes.length < 4) throw new Error("Plik jest uszkodzony.");
+    
+    const ext = uploadedFile.name.split('.').pop()?.toLowerCase() || "png";
+    if (!["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
+      throw new Error("Niedozwolone rozszerzenie pliku.");
+    }
+
     const storedName = `avatar-${user.id}-${Date.now()}.${ext}`;
     const uploadDir = path.join(process.cwd(), "public", "avatars");
     await mkdir(uploadDir, { recursive: true });

@@ -572,7 +572,25 @@ export default function Dashboard() {
           )}
         </nav>
         <div className="user-card">
-          <Avatar user={user} />
+          <input type="file" hidden id="avatar-upload" accept="image/png,image/jpeg,image/webp" onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+              alert("Plik jest zbyt duzy. Maksymalny rozmiar to 2MB.");
+              return;
+            }
+            const form = new FormData();
+            form.append("file", file);
+            try {
+              const res = await jsonFetch<{ user: User }>("/api/auth/avatar", { method: "POST", body: form });
+              setUser(res.user);
+            } catch (err) {
+              alert(err instanceof Error ? err.message : "Blad podczas wgrywania awatara.");
+            }
+          }} />
+          <label htmlFor="avatar-upload" style={{ cursor: "pointer", display: "flex" }} title="Zmien avatar (max 2MB)">
+            <Avatar user={user} />
+          </label>
           <div>
             <strong>{user.name}</strong>
             <span>@{user.username} · {user.role}</span>

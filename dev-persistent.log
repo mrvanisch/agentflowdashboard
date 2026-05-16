@@ -128,3 +128,49 @@
  GET / 200 in 397ms
  GET /api/auth/me 200 in 25ms
  GET /api/bootstrap 200 in 37ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 555ms (631 modules)
+ GET / 200 in 480ms
+ GET /api/auth/me 200 in 32ms
+ GET /api/bootstrap 200 in 35ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 287ms (631 modules)
+ GET / 200 in 300ms
+ GET /api/auth/me 200 in 39ms
+ GET /api/bootstrap 200 in 31ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 490ms (631 modules)
+ GET / 200 in 417ms
+ GET /api/auth/me 200 in 68ms
+ GET /api/bootstrap 200 in 60ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 33ms
+ GET /api/bootstrap 200 in 37ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 36ms
+ GET /api/bootstrap 200 in 19ms
+ GET /api/bootstrap 200 in 35ms
+ GET /api/bootstrap 200 in 17ms
+ GET /api/bootstrap 200 in 33ms
+ ⨯ ./src/components/dashboard.tsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\kacpe\Desktop\AgentFllowDaschbord\src\components\dashboard.tsx[0m:1084:1]
+ [2m1081[0m |     </div>
+ [2m1082[0m |   );
+ [2m1083[0m | }
+ [2m1084[0m |        )}
+      : [35;1m       ^[0m
+ [2m1085[0m |                 </div>
+ [2m1086[0m |               ))}
+ [2m1086[0m |             </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/dashboard.tsx
+./src/app/page.tsx
+ ✓ Compiled in 374ms (608 modules)
+ ✓ Compiled in 265ms (608 modules)
+ ✓ Compiled in 158ms (608 modules)
