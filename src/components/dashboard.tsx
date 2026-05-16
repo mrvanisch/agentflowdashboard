@@ -30,6 +30,7 @@ type User = {
   username: string;
   email: string;
   avatarColor: string;
+  avatarUrl?: string | null;
   role: "ADMIN" | "MEMBER";
   approved: boolean;
   mustChangePassword?: boolean;
