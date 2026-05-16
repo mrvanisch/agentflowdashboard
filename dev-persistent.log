@@ -11,3 +11,6 @@
 
  ✓ Starting...
  ✓ Ready in 2.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 1120ms (607 modules)
+ GET / 200 in 1562ms

@@ -289,19 +289,20 @@ button {
 }
 
 .board {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(238px, 1fr));
-  gap: 14px;
+  display: flex;
   overflow-x: auto;
-  padding: 2px 2px 10px;
+  gap: 10px;
+  padding: 2px 2px 12px;
 }
 
 .column {
+  flex: 1;
+  min-width: 175px;
   min-height: calc(100vh - 220px);
   background: #edf1f7;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 
