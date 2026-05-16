@@ -272,6 +272,14 @@ export default function Dashboard() {
       .catch(() => setAuthChecked(true));
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      load();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   async function submitAuth(event: React.FormEvent) {
     event.preventDefault();
     setSaving(true);
