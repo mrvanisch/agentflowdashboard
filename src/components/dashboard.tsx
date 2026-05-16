@@ -307,6 +307,19 @@ export default function Dashboard() {
     setTasks((items) => items.map((task) => (task.id === id ? data.task : task)));
   }
 
+  async function deleteTask(id: string) {
+    if (!confirm("Czy na pewno chcesz bezpowrotnie usunac to zadanie?")) return;
+    try {
+      await jsonFetch(`/api/tasks/${id}`, { method: "DELETE" });
+      setTasks((items) => items.filter((task) => task.id !== id));
+      if (selectedId === id) {
+        setSelectedId(tasks.filter(t => t.id !== id)[0]?.id || null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nie udalo sie usunac taska.");
+    }
+  }
+
   async function addComment(event: React.FormEvent) {
     event.preventDefault();
     if (!selected || !comment.trim()) return;
@@ -592,7 +605,16 @@ export default function Dashboard() {
 
             {selected && (
               <section className="task-detail">
-                <div className="panel-title"><Sparkles size={18} /> {selected.key}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <div className="panel-title" style={{ margin: 0 }}><Sparkles size={18} /> {selected.key}</div>
+                  <button 
+                    type="button" 
+                    onClick={() => deleteTask(selected.id)} 
+                    style={{ background: "none", border: "1px solid var(--error)", color: "var(--error)", borderRadius: "4px", padding: "4px 8px", fontSize: "12px", cursor: "pointer" }}
+                  >
+                    Usun zadanie
+                  </button>
+                </div>
                 <input className="title-input" value={selected.title} onChange={(e) => updateTask(selected.id, { title: e.target.value })} />
                 <textarea value={selected.description} onChange={(e) => updateTask(selected.id, { description: e.target.value })} />
                 <div className="two-col">
