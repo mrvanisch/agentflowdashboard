@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * Parameters required to create a security audit log entry.
+ */
 type AuditParams = {
   userId?: string | null;
   action: string;
@@ -9,6 +12,13 @@ type AuditParams = {
   details?: Record<string, any>;
 };
 
+/**
+ * Global audit logging function.
+ * Silently records security-relevant events to the database along with the actor's IP address and User-Agent.
+ * Designed to not interrupt the main application flow even if logging fails.
+ * 
+ * @param {AuditParams} params - The details of the action to be logged.
+ */
 export async function logAudit({ userId, action, entity, entityId, details }: AuditParams) {
   try {
     const headersList = await headers();

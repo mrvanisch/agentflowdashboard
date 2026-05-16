@@ -4,14 +4,26 @@ import { prisma } from "@/lib/prisma";
 
 const COOKIE_NAME = "agentflow_session";
 
+/**
+ * Retrieves the session secret used for signing authentication cookies.
+ * Falls back to a default value in local development.
+ */
 function secret() {
   return process.env.SESSION_SECRET || "local-development-secret";
 }
 
+/**
+ * Generates a cryptographic signature for a given session value.
+ */
 function sign(value: string) {
   return createHmac("sha256", secret()).update(value).digest("base64url");
 }
 
+/**
+ * Creates a secure, HTTP-only session cookie for the specified user.
+ * 
+ * @param {string} userId - The ID of the user to authenticate.
+ */
 export async function createSession(userId: string) {
   const nonce = randomBytes(12).toString("base64url");
   const value = `${userId}.${Date.now()}.${nonce}`;
@@ -27,11 +39,18 @@ export async function createSession(userId: string) {
   });
 }
 
+/**
+ * Clears the current user's session cookie, effectively logging them out.
+ */
 export async function clearSession() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
 }
 
+/**
+ * Validates the session cookie and returns the currently authenticated user.
+ * Returns null if the user is not authenticated or the session is invalid.
+ */
 export async function getCurrentUser() {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
@@ -65,6 +84,10 @@ export async function getCurrentUser() {
   });
 }
 
+/**
+ * Ensures a user is authenticated and approved. 
+ * Throws an UnauthorizedError if validation fails.
+ */
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) {
@@ -74,23 +97,31 @@ export async function requireUser() {
   }
   if (!user.approved) {
     await clearSession();
-    const error = new Error("Konto czeka na akceptacje admina.");
+    const error = new Error("Konto czeka na akceptacje admina."); // Account pending admin approval
     error.name = "UnauthorizedError";
     throw error;
   }
   return user;
 }
 
+/**
+ * Ensures the authenticated user holds the ADMIN role.
+ * Throws an error if the user lacks sufficient privileges.
+ */
 export async function requireAdmin() {
   const user = await requireUser();
   if (user.role !== "ADMIN") {
-    const error = new Error("Tylko admin moze wykonac te operacje.");
+    const error = new Error("Tylko admin moze wykonac te operacje."); // Only admins can perform this action
     error.name = "UnauthorizedError";
     throw error;
   }
   return user;
 }
 
+/**
+ * Bootstraps the application by ensuring a default administrator account exists.
+ * The default credentials are admin@admin.com / admin123.
+ */
 export async function ensureAdminAccount() {
   const adminExists = await prisma.user.findUnique({ where: { username: "admin" } });
   if (!adminExists) {
