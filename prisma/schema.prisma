@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String             @id @default(cuid())
+  name              String
+  username          String             @unique
+  email             String             @unique
+  passwordHash      String
+  avatarColor       String             @default("#2563eb")
+  role              String             @default("MEMBER")
+  approved          Boolean            @default(false)
+  mustChangePassword Boolean           @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  ownedProjects     Project[]          @relation("ProjectOwner")
+  createdTasks      Task[]             @relation("CreatedTasks")
+  taskAssignments   TaskAssignee[]
+  comments          Comment[]
+  attachments       Attachment[]
+  taskLinks         TaskLink[]
+  activities        Activity[]
+  notifications     Notification[]     @relation("NotificationUser")
+  sentNotifications Notification[]     @relation("NotificationActor")
+  auditLogs         AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model IPBlock {
+  id        String   @id @default(cuid())
+  ipAddress String   @unique
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  description String?
+  ownerId     String
+  owner       User     @relation("ProjectOwner", fields: [ownerId], references: [id])
+  tasks       Task[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String         @id @default(cuid())
+  key         String         @unique
+  title       String
+  description String
+  status      String         @default("TODO")
+  priority    String         @default("MEDIUM")
+  dueDate     DateTime?
+  projectId   String
+  reporterId  String
+  project     Project        @relation(fields: [projectId], references: [id])
+  reporter    User           @relation("CreatedTasks", fields: [reporterId], references: [id])
+  assignees   TaskAssignee[]
+  comments    Comment[]
+  attachments Attachment[]
+  links       TaskLink[]
+  activities  Activity[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model TaskAssignee {
+  taskId     String
+  userId     String
+  assignedAt DateTime @default(now())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  taskId    String
+  authorId  String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  taskId       String
+  uploadedById String
+  fileName     String
+  fileSize     Int
+  mimeType     String
+  url          String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model TaskLink {
+  id        String   @id @default(cuid())
+  taskId    String
+  authorId  String
+  title     String
+  url       String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Activity {
+  id        String         @id @default(cuid())
+  taskId    String
+  actorId   String
+  action    String
+  message   String
+  task      Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor     User           @relation(fields: [actorId], references: [id])
+  createdAt DateTime       @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  actorId   String?
+  taskId    String?
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  user      User     @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User?    @relation("NotificationActor", fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+}
