@@ -632,7 +632,21 @@ export default function Dashboard() {
                   <button>Wyslij</button>
                 </form>
                 <Feed title="Komentarze" items={selected.comments.map((item) => `${item.author.name}: ${item.body}`)} />
-                <Feed title="Pliki" items={selected.attachments.map((item) => `${item.fileName} (${Math.ceil(item.fileSize / 1024)} KB)`)} />
+                <div className="feed">
+                  <strong>Pliki</strong>
+                  {selected.attachments.length === 0 ? (
+                    <span className="muted">Brak wpisow</span>
+                  ) : (
+                    selected.attachments.map((item) => (
+                      <p key={item.id}>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <Paperclip size={14} />
+                          {item.fileName} ({Math.ceil(item.fileSize / 1024)} KB)
+                        </a>
+                      </p>
+                    ))
+                  )}
+                </div>
                 <Feed title="Aktywnosc" items={selected.activities.map((item) => `${item.actor.name}: ${item.message}`)} />
               </section>
             )}

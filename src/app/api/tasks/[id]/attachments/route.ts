@@ -17,12 +17,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     });
     const form = await request.formData();
     const file = form.get("file");
-    if (!(file instanceof File)) {
-      throw new Error("Brak pliku.");
+    
+    // Check if file is provided and is not just a string
+    if (!file || typeof file === "string" || !('arrayBuffer' in file)) {
+      throw new Error("Brak pliku lub niepoprawny format.");
     }
 
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
+    // Cast as File to access its properties safely
+    const uploadedFile = file as File;
+    const bytes = Buffer.from(await uploadedFile.arrayBuffer());
+    const safeName = uploadedFile.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
     const storedName = `${Date.now()}-${safeName}`;
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
@@ -32,13 +36,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       data: {
         taskId: id,
         uploadedById: user.id,
-        fileName: file.name,
+        fileName: uploadedFile.name,
         fileSize: bytes.length,
-        mimeType: file.type || "application/octet-stream",
+        mimeType: uploadedFile.type || "application/octet-stream",
         url: `/uploads/${storedName}`
       }
     });
-    await logActivity(id, user.id, "ATTACHED", `Dodano plik ${file.name}.`);
+    await logActivity(id, user.id, "ATTACHED", `Dodano plik ${uploadedFile.name}.`);
     await notifyUsers({
       userIds: task.assignees.map((item) => item.userId),
       actorId: user.id,
