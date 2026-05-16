@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Bell, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileUp, Info, Link2, MessageSquare, Paperclip, Users } from "lucide-react";
+import { ArrowLeft, Bell, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileUp, Info, Link2, MessageSquare, Paperclip, Users, X } from "lucide-react";
 
 type User = {
   id: string;
@@ -77,7 +77,14 @@ function formatDate(value?: string | null) {
   return new Date(value).toLocaleDateString("pl-PL");
 }
 
-export default function TaskCasePage({ caseKey }: { caseKey: string }) {
+type TaskCasePageProps = {
+  caseKey: string;
+  embedded?: boolean;
+  onClose?: () => void;
+  onTaskUpdated?: (task: Task) => void;
+};
+
+export default function TaskCasePage({ caseKey, embedded = false, onClose, onTaskUpdated }: TaskCasePageProps) {
   const [task, setTask] = useState<Task | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [draft, setDraft] = useState({ title: "", description: "", status: "TODO" as Status, priority: "MEDIUM" as Priority, dueDate: "", assigneeIds: [] as string[] });
@@ -94,6 +101,7 @@ export default function TaskCasePage({ caseKey }: { caseKey: string }) {
       jsonFetch<{ users: User[] }>("/api/bootstrap")
     ]);
     setTask(taskData.task);
+    onTaskUpdated?.(taskData.task);
     setUsers(bootstrap.users.filter((user) => user.approved));
     setDraft({
       title: taskData.task.title,
@@ -119,6 +127,7 @@ export default function TaskCasePage({ caseKey }: { caseKey: string }) {
         body: JSON.stringify(nextDraft)
       });
       setTask(data.task);
+      onTaskUpdated?.(data.task);
       setDraft({
         title: data.task.title,
         description: data.task.description,
@@ -149,6 +158,7 @@ export default function TaskCasePage({ caseKey }: { caseKey: string }) {
       body: JSON.stringify({ body: comment })
     });
     setTask(data.task);
+    onTaskUpdated?.(data.task);
     setComment("");
   }
 
@@ -161,6 +171,7 @@ export default function TaskCasePage({ caseKey }: { caseKey: string }) {
       body: form
     });
     setTask(data.task);
+    onTaskUpdated?.(data.task);
   }
 
   async function addLink(event: React.FormEvent) {
@@ -171,14 +182,15 @@ export default function TaskCasePage({ caseKey }: { caseKey: string }) {
       body: JSON.stringify(linkDraft)
     });
     setTask(data.task);
+    onTaskUpdated?.(data.task);
     setLinkDraft({ title: "", url: "" });
   }
 
   if (error && !task) {
     return (
-      <main className="case-shell">
+      <main className={embedded ? "case-shell embedded" : "case-shell"}>
         <section className="case-card">
-          <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>
+          {embedded ? <button className="case-link button-link" onClick={onClose}><X size={16} /> Zamknij</button> : <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>}
           <p className="error">{error}</p>
         </section>
       </main>
@@ -187,16 +199,20 @@ export default function TaskCasePage({ caseKey }: { caseKey: string }) {
 
   if (!task) {
     return (
-      <main className="case-shell">
+      <main className={embedded ? "case-shell embedded" : "case-shell"}>
         <section className="case-card">Ladowanie sprawy...</section>
       </main>
     );
   }
 
   return (
-    <main className="case-shell">
+    <main className={embedded ? "case-shell embedded" : "case-shell"}>
       <header className="case-header">
-        <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>
+        {embedded ? (
+          <button className="case-link button-link" onClick={onClose}><X size={16} /> Zamknij</button>
+        ) : (
+          <a className="case-link" href="/"><ArrowLeft size={16} /> Board</a>
+        )}
         <div>
           <span className="case-number">Numer sprawy {task.key}</span>
           <h1>{task.title}</h1>

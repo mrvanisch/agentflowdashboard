@@ -21,6 +21,7 @@ import {
   UserPlus,
   Users
 } from "lucide-react";
+import TaskCasePage from "@/components/task-case-page";
 
 type User = {
   id: string;
@@ -143,6 +144,9 @@ export default function Dashboard() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [blockedIps, setBlockedIps] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openCaseKey, setOpenCaseKey] = useState<string | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<Status | null>(null);
   const [view, setView] = useState<"board" | "people" | "notifications" | "history" | "admin" | "audit">("board");
   const [mode, setMode] = useState<"login" | "register">("register");
   const [auth, setAuth] = useState({ name: "", username: "", email: "", password: "", token: "" });
@@ -305,6 +309,19 @@ export default function Dashboard() {
     };
     const data = await jsonFetch<{ task: Task }>(`/api/tasks/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
     setTasks((items) => items.map((task) => (task.id === id ? data.task : task)));
+  }
+
+  async function moveTaskToStatus(taskId: string, status: Status) {
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task || task.status === status) return;
+    setSelectedId(taskId);
+    setDragOverStatus(null);
+    await updateTask(taskId, { status });
+  }
+
+  function mergeUpdatedTask(updatedTask: Task) {
+    setTasks((items) => items.map((task) => (task.id === updatedTask.id ? updatedTask : task)));
+    setSelectedId(updatedTask.id);
   }
 
   async function deleteTask(id: string) {
@@ -539,19 +556,55 @@ export default function Dashboard() {
             {statuses.map((status) => {
               const columnTasks = filteredTasks.filter((task) => task.status === status.id);
               return (
-                <div className="column" key={status.id}>
+                <div
+                  className={`column ${dragOverStatus === status.id ? "drop-target" : ""}`}
+                  key={status.id}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    if (dragOverStatus !== status.id) setDragOverStatus(status.id);
+                  }}
+                  onDragLeave={() => setDragOverStatus((current) => (current === status.id ? null : current))}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    const taskId = event.dataTransfer.getData("text/task-id") || draggedTaskId;
+                    if (taskId) moveTaskToStatus(taskId, status.id);
+                    setDraggedTaskId(null);
+                    setDragOverStatus(null);
+                  }}
+                >
                   <div className="column-head"><span>{status.label}</span><strong>{columnTasks.length}</strong></div>
                   {columnTasks.map((task) => (
                     <article
-                      className={`task-card ${selected?.id === task.id ? "selected" : ""}`}
+                      className={`task-card ${selected?.id === task.id ? "selected" : ""} ${draggedTaskId === task.id ? "dragging" : ""}`}
                       key={task.id}
+                      draggable
+                      onDragStart={(event) => {
+                        setDraggedTaskId(task.id);
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/task-id", task.id);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedTaskId(null);
+                        setDragOverStatus(null);
+                      }}
                       onClick={() => {
                         setSelectedId(task.id);
-                        window.open(`/tasks/${task.key}`, "_blank", "noopener,noreferrer");
+                        setOpenCaseKey(task.key);
                       }}
                     >
                       <div className="task-card-head">
-                        <a className="case-link" href={`/tasks/${task.key}`} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>Sprawa {task.key}</a>
+                        <a
+                          className="case-link"
+                          href={`/tasks/${task.key}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setSelectedId(task.id);
+                            setOpenCaseKey(task.key);
+                          }}
+                        >
+                          Sprawa {task.key}
+                        </a>
                         <em className={`priority ${task.priority.toLowerCase()}`}>{priorityLabel[task.priority]}</em>
                       </div>
                       <strong>{task.title}</strong>
@@ -693,6 +746,19 @@ export default function Dashboard() {
             </section>
           </aside>
         </section>}
+
+        {openCaseKey && (
+          <div className="case-modal-backdrop" role="dialog" aria-modal="true" onMouseDown={() => setOpenCaseKey(null)}>
+            <div className="case-modal" onMouseDown={(event) => event.stopPropagation()}>
+              <TaskCasePage
+                caseKey={openCaseKey}
+                embedded
+                onClose={() => setOpenCaseKey(null)}
+                onTaskUpdated={mergeUpdatedTask}
+              />
+            </div>
+          </div>
+        )}
 
         {view === "people" && (
           <section className="page-panel">
