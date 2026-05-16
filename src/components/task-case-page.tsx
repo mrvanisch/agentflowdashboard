@@ -94,6 +94,7 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [isFileDragging, setIsFileDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const taskRef = useRef<Task | null>(null);
   const draftRef = useRef(draft);
@@ -363,7 +364,23 @@ export default function TaskCasePage({ caseKey, embedded = false, onClose, onTas
             </div>
           </section>
 
-          <section className="case-card">
+          <section 
+            className={`case-card ${isFileDragging ? "file-drag-over" : ""}`}
+            onDragOver={(e) => { e.preventDefault(); setIsFileDragging(true); }}
+            onDragLeave={() => setIsFileDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsFileDragging(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) uploadFile(file);
+            }}
+            style={{ position: "relative" }}
+          >
+            {isFileDragging && (
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(37, 99, 235, 0.1)", border: "2px dashed var(--primary)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                <strong style={{ color: "var(--primary)", fontSize: "16px", pointerEvents: "none" }}><FileUp size={24} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Upusc plik, aby dodac</strong>
+              </div>
+            )}
             <div className="panel-title"><Paperclip size={18} /> Pliki</div>
             <input ref={fileInput} type="file" hidden onChange={(e) => e.target.files?.[0] && uploadFile(e.target.files[0])} />
             <button type="button" onClick={() => fileInput.current?.click()}><FileUp size={16} /> Dodaj zalacznik</button>

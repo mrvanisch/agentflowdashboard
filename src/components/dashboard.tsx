@@ -147,6 +147,7 @@ export default function Dashboard() {
   const [openCaseKey, setOpenCaseKey] = useState<string | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<Status | null>(null);
+  const [isFileDragging, setIsFileDragging] = useState(false);
   const [view, setView] = useState<"board" | "people" | "notifications" | "history" | "admin" | "audit">("board");
   const [mode, setMode] = useState<"login" | "register">("register");
   const [auth, setAuth] = useState({ name: "", username: "", email: "", password: "", token: "" });
@@ -705,7 +706,23 @@ export default function Dashboard() {
             </form>
 
             {selected && (
-              <section className="task-detail">
+              <section 
+                className={`task-detail ${isFileDragging ? "file-drag-over" : ""}`}
+                onDragOver={(e) => { e.preventDefault(); setIsFileDragging(true); }}
+                onDragLeave={() => setIsFileDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsFileDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) uploadFile(file);
+                }}
+                style={{ position: "relative" }}
+              >
+                {isFileDragging && (
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(37, 99, 235, 0.1)", border: "2px dashed var(--primary)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                    <strong style={{ color: "var(--primary)", fontSize: "16px", pointerEvents: "none" }}><FileUp size={24} style={{ marginRight: "8px", verticalAlign: "middle" }} /> Upusc plik, aby dodac</strong>
+                  </div>
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                   <div className="panel-title" style={{ margin: 0 }}><Sparkles size={18} /> {selected.key}</div>
                   <button 
