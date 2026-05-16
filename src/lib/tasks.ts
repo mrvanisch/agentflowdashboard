@@ -62,27 +62,18 @@ export async function ensureDefaultProject(userId: string) {
 
 export async function nextTaskKey(projectId: string) {
   const project = await prisma.project.findUniqueOrThrow({ where: { id: projectId } });
-  
-  // Find the task with the highest key number by sorting
-  const lastTask = await prisma.task.findFirst({
-    where: { projectId },
-    orderBy: { createdAt: "desc" },
+  const existingKeys = await prisma.task.findMany({
+    where: { projectId, key: { startsWith: `${project.key}-` } },
     select: { key: true }
   });
 
-  if (!lastTask) return `${project.key}-1`;
+  const highestNumber = existingKeys.reduce((highest, task) => {
+    const suffix = task.key.slice(project.key.length + 1);
+    const number = Number.parseInt(suffix, 10);
+    return Number.isFinite(number) && `${number}` === suffix ? Math.max(highest, number) : highest;
+  }, 0);
 
-  // Extract the number from keys like "AFD-12"
-  const parts = lastTask.key.split("-");
-  const lastNumber = parseInt(parts[parts.length - 1], 10);
-  
-  if (isNaN(lastNumber)) {
-    // Fallback to count if key format is unexpected
-    const count = await prisma.task.count({ where: { projectId } });
-    return `${project.key}-${count + 1}`;
-  }
-
-  return `${project.key}-${lastNumber + 1}`;
+  return `${project.key}-${highestNumber + 1}`;
 }
 
 export type ActivityAction = "CREATED" | "UPDATED" | "STATUS_CHANGED" | "ASSIGNED" | "COMMENTED" | "ATTACHED" | "LINKED" | "MENTIONED";

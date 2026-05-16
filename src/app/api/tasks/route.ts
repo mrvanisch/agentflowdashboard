@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { handleError, ok } from "@/lib/api";
@@ -5,29 +6,48 @@ import { ensureDefaultProject, logActivity, nextTaskKey, notifyUsers, taskInclud
 import { taskCreateSchema } from "@/lib/validation";
 import { logAudit } from "@/lib/audit";
 
+function isTaskKeyCollision(error: unknown) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
+  const target = (error.meta as { target?: string[] | string } | undefined)?.target;
+  return target === "key" || (Array.isArray(target) && target.includes("key"));
+}
+
 export async function POST(request: Request) {
   try {
     const user = await requireUser();
     const project = await ensureDefaultProject(user.id);
     const body = taskCreateSchema.parse(await request.json());
-    const key = await nextTaskKey(project.id);
 
-    const task = await prisma.task.create({
-      data: {
-        key,
-        title: body.title,
-        description: body.description,
-        priority: body.priority,
-        status: body.status,
-        dueDate: body.dueDate ? new Date(body.dueDate) : null,
-        projectId: project.id,
-        reporterId: user.id,
-        assignees: {
-          create: body.assigneeIds.map((userId) => ({ userId }))
+    let task: Prisma.TaskGetPayload<{ include: typeof taskInclude }> | null = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const key = await nextTaskKey(project.id);
+      try {
+        task = await prisma.task.create({
+          data: {
+            key,
+            title: body.title,
+            description: body.description,
+            priority: body.priority,
+            status: body.status,
+            dueDate: body.dueDate ? new Date(body.dueDate) : null,
+            projectId: project.id,
+            reporterId: user.id,
+            assignees: {
+              create: body.assigneeIds.map((userId) => ({ userId }))
+            }
+          },
+          include: taskInclude
+        });
+        break;
+      } catch (error) {
+        if (attempt < 2 && isTaskKeyCollision(error)) {
+          continue;
         }
-      },
-      include: taskInclude
-    });
+        throw error;
+      }
+    }
+
+    if (!task) throw new Error("Nie udalo sie wygenerowac numeru taska.");
 
     await logActivity(task.id, user.id, "CREATED", `Utworzono zadanie ${task.key}.`);
     await logAudit({ userId: user.id, action: "TASK_CREATE", entity: "Task", entityId: task.id, details: { key: task.key, title: task.title } });

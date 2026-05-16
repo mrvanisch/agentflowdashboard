@@ -1,32 +1,29 @@
 import { readFile } from "fs/promises";
 import path from "path";
-import { NextResponse } from "next/server";
+import { avatarContentType, avatarUploadDir, isSafeAvatarFileName } from "@/lib/avatar-storage";
+
+export const runtime = "nodejs";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ filename: string }> }
 ) {
-  try {
-    const { filename } = await params;
-    const filePath = path.join(process.cwd(), "public", "avatars", filename);
-    const buffer = await readFile(filePath);
-    
-    const ext = filename.split(".").pop()?.toLowerCase();
-    const contentType = {
-      png: "image/png",
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      webp: "image/webp",
-      gif: "image/gif"
-    }[ext || ""] || "application/octet-stream";
+  const { filename } = await params;
+  if (!isSafeAvatarFileName(filename)) {
+    return new Response("Not Found", { status: 404 });
+  }
 
-    return new NextResponse(buffer, {
+  try {
+    const filePath = path.join(avatarUploadDir(), filename);
+    const bytes = await readFile(filePath);
+
+    return new Response(new Uint8Array(bytes), {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": avatarContentType(filename),
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     });
-  } catch (error) {
-    return new NextResponse("Not Found", { status: 404 });
+  } catch {
+    return new Response("Not Found", { status: 404 });
   }
 }
