@@ -110,6 +110,8 @@ const priorityLabel: Record<Priority, string> = {
   URGENT: "Pilny"
 };
 
+const TASK_CARD_DESCRIPTION_LIMIT = 200;
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -160,6 +162,7 @@ export default function Dashboard() {
   const [blockedIps, setBlockedIps] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openCaseKey, setOpenCaseKey] = useState<string | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<Status | null>(null);
   const [isFileDragging, setIsFileDragging] = useState(false);
@@ -204,6 +207,28 @@ export default function Dashboard() {
         .includes(term)
     );
   }, [query, tasks]);
+
+  function taskCardDescription(task: Task) {
+    const description = task.description?.trim();
+    if (!description) return { text: "Brak opisu", truncated: false };
+    const expanded = expandedDescriptions.has(task.id);
+    if (description.length <= TASK_CARD_DESCRIPTION_LIMIT || expanded) {
+      return { text: description, truncated: description.length > TASK_CARD_DESCRIPTION_LIMIT };
+    }
+    return { text: `${description.slice(0, TASK_CARD_DESCRIPTION_LIMIT).trimEnd()}...`, truncated: true };
+  }
+
+  function toggleDescription(taskId: string) {
+    setExpandedDescriptions((current) => {
+      const next = new Set(current);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  }
 
   async function load() {
     const data = await jsonFetch<{
@@ -689,51 +714,67 @@ export default function Dashboard() {
                   }}
                 >
                   <div className="column-head"><span>{status.label}</span><strong>{columnTasks.length}</strong></div>
-                  {columnTasks.map((task) => (
-                    <article
-                      className={`task-card ${selected?.id === task.id ? "selected" : ""} ${draggedTaskId === task.id ? "dragging" : ""}`}
-                      key={task.id}
-                      draggable
-                      onDragStart={(event) => {
-                        setDraggedTaskId(task.id);
-                        event.dataTransfer.effectAllowed = "move";
-                        event.dataTransfer.setData("text/task-id", task.id);
-                      }}
-                      onDragEnd={() => {
-                        setDraggedTaskId(null);
-                        setDragOverStatus(null);
-                      }}
-                      onClick={() => {
-                        setSelectedId(task.id);
-                        setOpenCaseKey(task.key);
-                      }}
-                    >
-                      <div className="task-card-head">
-                        <a
-                          className="case-link"
-                          href={`/tasks/${task.key}`}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            setSelectedId(task.id);
-                            setOpenCaseKey(task.key);
-                          }}
-                        >
-                          Sprawa {task.key}
-                        </a>
-                        <em className={`priority ${task.priority.toLowerCase()}`}>{priorityLabel[task.priority]}</em>
-                      </div>
-                      <strong>{task.title}</strong>
-                      <p>{task.description || "Brak opisu"}</p>
-                      <div className="task-card-foot">
-                        <span><MessageSquare size={14} /> {task.comments.length}</span>
-                        <span><Paperclip size={14} /> {task.attachments.length}</span>
-                        <div className="avatar-stack">
-                          {task.assignees.slice(0, 3).map((item) => <Avatar key={item.user.id} user={item.user} />)}
+                  {columnTasks.map((task) => {
+                    const description = taskCardDescription(task);
+                    const expanded = expandedDescriptions.has(task.id);
+                    return (
+                      <article
+                        className={`task-card ${selected?.id === task.id ? "selected" : ""} ${draggedTaskId === task.id ? "dragging" : ""}`}
+                        key={task.id}
+                        draggable
+                        onDragStart={(event) => {
+                          setDraggedTaskId(task.id);
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData("text/task-id", task.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedTaskId(null);
+                          setDragOverStatus(null);
+                        }}
+                        onClick={() => {
+                          setSelectedId(task.id);
+                          setOpenCaseKey(task.key);
+                        }}
+                      >
+                        <div className="task-card-head">
+                          <a
+                            className="case-link"
+                            href={`/tasks/${task.key}`}
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setSelectedId(task.id);
+                              setOpenCaseKey(task.key);
+                            }}
+                          >
+                            Sprawa {task.key}
+                          </a>
+                          <em className={`priority ${task.priority.toLowerCase()}`}>{priorityLabel[task.priority]}</em>
                         </div>
-                      </div>
-                    </article>
-                  ))}
+                        <strong>{task.title}</strong>
+                        <p>{description.text}</p>
+                        {description.truncated && (
+                          <button
+                            type="button"
+                            className="task-card-toggle"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleDescription(task.id);
+                            }}
+                          >
+                            {expanded ? "Zwin" : "Rozwin"}
+                          </button>
+                        )}
+                        <div className="task-card-foot">
+                          <span><MessageSquare size={14} /> {task.comments.length}</span>
+                          <span><Paperclip size={14} /> {task.attachments.length}</span>
+                          <div className="avatar-stack">
+                            {task.assignees.slice(0, 3).map((item) => <Avatar key={item.user.id} user={item.user} />)}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               );
             })}
