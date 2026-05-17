@@ -47,6 +47,13 @@ AgentFlow Dashboard is a modern, Jira-like task management and team collaboratio
    ```
    The application will be available at `http://localhost:5000`.
 
+4. Run the production server:
+   ```bash
+   npm run build
+   npm start
+   ```
+   The production server listens on port `80`, so your domain can point directly to the VPS public IP. On Linux, make sure no other service such as Nginx or Apache is already using port `80`.
+
 ## 🔐 Authentication & Onboarding
 
 1. **Initial Admin Setup:** When the application is launched, a default admin account is automatically created:
