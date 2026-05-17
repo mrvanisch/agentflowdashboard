@@ -52,7 +52,7 @@ AgentFlow Dashboard is a modern, Jira-like task management and team collaboratio
    npm run build
    npm start
    ```
-   The production server listens on port `80`, so your domain can point directly to the VPS public IP. On Linux, make sure no other service such as Nginx or Apache is already using port `80`.
+   The production server listens on port `5000`. Put Nginx in front of it when you want to serve the app from a domain on port `80` or `443`.
 
 ## 🔐 Authentication & Onboarding
 
